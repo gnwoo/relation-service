@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option java_multiple_files = false;
+option java_package = "com.gnwoo.userservice.authRPC";
+option java_outer_classname = "AuthProto";
+
+message GeneralResponse {
+  bool decision = 1;
+  string feedback = 2;
+}
+
+message CredientialResponse {
+  bool decision = 1;
+  string feedback = 2;
+  string JWT = 3;
+}
+
+message PasswordRequest {
+  string uuid = 1;
+  string password = 2;
+}
+
+message JWTRequest {
+  string JWT = 1;
+}
+
+message PasscodeRequest {
+  string uuid = 1;
+  string password = 2;
+}
+
+message AuthRequest {
+  string JWT = 1;
+  string action = 2;
+}
+
+service AuthService {
+  rpc SignUp(PasswordRequest) returns (GeneralResponse) {}
+  rpc Login(PasswordRequest) returns (CredientialResponse) {}
+  rpc Logout(JWTRequest) returns (GeneralResponse) {}
+  rpc LogoutEverywhere(JWTRequest) returns (GeneralResponse) {}
+  rpc ChangePassword(PasscodeRequest) returns (CredientialResponse) {}
+  rpc CheckAuth(AuthRequest) returns (GeneralResponse) {}
+}
