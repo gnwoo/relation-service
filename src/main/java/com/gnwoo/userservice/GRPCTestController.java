@@ -14,10 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -72,13 +69,21 @@ public class GRPCTestController {
                             .setPassword(req.getPassword()).build());
             if (res != null && res.getDecision()) {
                 HttpHeaders headers = new HttpHeaders();
-                headers.set("Set-Cookie", "JWT=" + res.getJWT());
-//                headers.set("Set-Cookie", "HttpOnly");
+                headers.add("Set-Cookie", "JWT=" + res.getJWT());
+                headers.add("Set-Cookie", "uuid=" + user.getUuid());
+//                headers.add("Set-Cookie", "HttpOnly");
                 return ResponseEntity.ok()
                         .headers(headers)
                         .body(user);
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+    // mock auth
+    @GetMapping(path="/authStatus")
+    public ResponseEntity<String> login (@CookieValue String uuid, @CookieValue String JWT) {
+        System.out.println(uuid + " "  + JWT);
+        return ResponseEntity.ok().build();
     }
 }
