@@ -10,7 +10,6 @@ import com.gnwoo.userservice.data.table.Contact;
 import com.gnwoo.userservice.data.table.FriendRequest;
 import com.gnwoo.userservice.data.table.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.LinkedList;
 import java.util.List;
 
-@RestController
-@CrossOrigin(origins = "*")
+//@RestController
+//@CrossOrigin(origins = "*")
 public class TestController {
     @Autowired
     private UserRepo userRepository;
@@ -92,7 +91,7 @@ public class TestController {
         return "FALSE";
     }
 
-    @PostMapping(path="/signUp")
+//    @PostMapping(path="/signUp")
     public ResponseEntity<UserDTO> signUp (@RequestBody SignUpRequest req) {
         try {
 
@@ -105,7 +104,7 @@ public class TestController {
     }
 
     // no auth
-    @PostMapping(path="/login")
+//    @PostMapping(path="/login")
     public ResponseEntity<UserDTO> login (@RequestBody LoginRequest req) {
         List<User> user = userRepository.findByUsername(req.getUsername());
         if (!user.isEmpty()) {

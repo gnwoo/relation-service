@@ -9,14 +9,14 @@ message GeneralResponse {
   string feedback = 2;
 }
 
-message CredientialResponse {
+message CredentialResponse {
   bool decision = 1;
   string feedback = 2;
   string JWT = 3;
 }
 
 message PasswordRequest {
-  string uuid = 1;
+  int64 uuid = 1;
   string password = 2;
 }
 
@@ -25,7 +25,7 @@ message JWTRequest {
 }
 
 message PasscodeRequest {
-  string uuid = 1;
+  int64 uuid = 1;
   string password = 2;
 }
 
@@ -36,9 +36,9 @@ message AuthRequest {
 
 service AuthService {
   rpc SignUp(PasswordRequest) returns (GeneralResponse) {}
-  rpc Login(PasswordRequest) returns (CredientialResponse) {}
+  rpc Login(PasswordRequest) returns (CredentialResponse) {}
   rpc Logout(JWTRequest) returns (GeneralResponse) {}
   rpc LogoutEverywhere(JWTRequest) returns (GeneralResponse) {}
-  rpc ChangePassword(PasscodeRequest) returns (CredientialResponse) {}
+  rpc ChangePassword(PasscodeRequest) returns (GeneralResponse) {}
   rpc CheckAuth(AuthRequest) returns (GeneralResponse) {}
 }
