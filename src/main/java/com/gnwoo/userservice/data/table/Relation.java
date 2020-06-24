@@ -3,38 +3,30 @@ package com.gnwoo.userservice.data.table;
 import javax.persistence.*;
 
 @Entity
-public class FriendRequest {
+public class Relation {
     @Id @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private Long id;
+    private Long rID;
     @Column(nullable = false)
     private Long uuidA;
     @Column(nullable = false)
     private Long uuidB;
 
-    public FriendRequest() { }
+    public Relation() { }
 
-    public FriendRequest(Long uuidA, Long uuidB) {
+    public Relation(Long uuidA, Long uuidB) {
         this.uuidA = uuidA;
         this.uuidB = uuidB;
+    }
+
+    public Long getrID() {
+        return rID;
     }
 
     public Long getUuidA() {
         return uuidA;
     }
 
-    public void setUuidA(Long uuidA) {
-        this.uuidA = uuidA;
-    }
-
     public Long getUuidB() {
         return uuidB;
-    }
-
-    public void setUuidB(Long uuidB) {
-        this.uuidB = uuidB;
-    }
-
-    public Long getId() {
-        return id;
     }
 }

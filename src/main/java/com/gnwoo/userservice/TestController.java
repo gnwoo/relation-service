@@ -1,116 +1,167 @@
 package com.gnwoo.userservice;
 
-import com.gnwoo.userservice.data.dto.UserDTO;
-import com.gnwoo.userservice.data.repo.ContactRepo;
-import com.gnwoo.userservice.data.repo.FriendRequestRepo;
+import com.gnwoo.userservice.data.dto.*;
+import com.gnwoo.userservice.data.request.*;
+import com.gnwoo.userservice.data.repo.RelationRepo;
+import com.gnwoo.userservice.data.repo.InviteRepo;
 import com.gnwoo.userservice.data.repo.UserRepo;
-import com.gnwoo.userservice.data.req.LoginRequest;
-import com.gnwoo.userservice.data.req.SignUpRequest;
-import com.gnwoo.userservice.data.table.Contact;
-import com.gnwoo.userservice.data.table.FriendRequest;
+import com.gnwoo.userservice.data.table.Relation;
+import com.gnwoo.userservice.data.table.Invite;
 import com.gnwoo.userservice.data.table.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
-//@RestController
-//@CrossOrigin(origins = "*")
+@RestController
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class TestController {
     @Autowired
-    private UserRepo userRepository;
+    private RelationRepo relationRepo;
     @Autowired
-    private ContactRepo contactRepo;
+    private InviteRepo inviteRepo;
+
+    // @TODO: rpc repo
     @Autowired
-    private FriendRequestRepo friendRequestRepo;
+    private UserRepo userRepo;
 
-    @PostMapping(path="/getContacts")
-    public @ResponseBody List<UserDTO> getContacts(@RequestParam Long uuid) {
-        List<Long> relations = contactRepo.findRelationsFor(uuid);
-        List<UserDTO> rv = new LinkedList<>();
-        userRepository.findAllById(relations).forEach(e -> {
-            rv.add(new UserDTO(e));
+    @GetMapping(path="/contacts")
+    public ResponseEntity<List<ContactInUserView>> getContacts(@CookieValue Long uuid) {
+        List<Object[]> relations = relationRepo.findRelationsOf(uuid);
+        List<Long> uuids = new ArrayList<>();
+        List<Long> rIDs = new ArrayList<>();
+        relations.forEach(r -> {
+            uuids.add((Long) r[1]);
+            rIDs.add((Long) r[0]);
         });
-        return rv;
-    }
+        List<User> users = new ArrayList<>();
 
-    @PostMapping(path="/addFriend")
-    public @ResponseBody String addFriend (@RequestParam Long uuid,
-                                           @RequestParam Long friendUUID) {
-        if (!uuid.equals(friendUUID) && friendRequestRepo.findRequestFromTo(uuid, friendUUID).isEmpty()) {
-            friendRequestRepo.save(new FriendRequest(uuid, friendUUID));
-            return "TRUE";
+        // @TODO: rpc call, findAllByUUIDs(uuids: List<Long> (stream in rpc)) return User Stream
+        userRepo.findAllById(uuids).iterator().forEachRemaining(users::add);
+
+        List<ContactInUserView> rv = new LinkedList<>();
+        for (int i = 0; i < uuids.size(); i++) {
+            rv.add(new ContactInUserView(users.get(i), rIDs.get(i)));
         }
-        return "FALSE";
+        return ResponseEntity.ok(rv);
     }
 
-    @PostMapping(path="/getRequestsToMe")
-    public @ResponseBody List<UserDTO> getRequestsToMe (@RequestParam Long uuid) {
-        List<Long> requests = friendRequestRepo.findRequestTo(uuid);
-        List<UserDTO> rv = new LinkedList<>();
-        userRepository.findAllById(requests).forEach(e -> {
-            rv.add(new UserDTO(e));
+    @GetMapping(path="/contact-invites")
+    public ResponseEntity<List<InviteInUserView>> contactInvites(@CookieValue Long uuid) {
+        List<Object[]> requests = inviteRepo.findInviteFrom(uuid);
+        List<Long> ids = new ArrayList<>();
+        List<Long> uuids = new ArrayList<>();
+        requests.forEach(r -> {
+            ids.add((Long) r[0]);
+            uuids.add((Long) r[1]);
         });
-        return rv;
-    }
+        List<User> users = new ArrayList<>();
 
-    @PostMapping(path="/getRequestsFromMe")
-    public @ResponseBody List<UserDTO> getRequestsFromMe (@RequestParam Long uuid) {
-        List<Long> requests = friendRequestRepo.findRequestFrom(uuid);
-        List<UserDTO> rv = new LinkedList<>();
-        userRepository.findAllById(requests).forEach(e -> {
-            rv.add(new UserDTO(e));
-        });
-        return rv;
-    }
+        // @TODO: rpc call, findAllByUUIDs(uuids: List<Long> (stream in rpc)) return User Stream
+        userRepo.findAllById(uuids).iterator().forEachRemaining(users::add);
 
-    // example for auth right here
-    @PostMapping(path="/acceptRequest")
-    public @ResponseBody String getRequestsFromMe (@RequestParam Long uuid,
-                                                   @RequestParam Long requesterUUID) {
-        List<Long> requests = friendRequestRepo.findRequestFromTo(requesterUUID, uuid);
-        if (!requests.isEmpty()) {
-            friendRequestRepo.deleteById(requests.get(0));
-            contactRepo.save(new Contact(requesterUUID, uuid));
-            return "TRUE";
+        List<InviteInUserView> rv = new LinkedList<>();
+        for (int i = 0; i < uuids.size(); i++) {
+            rv.add(new InviteInUserView(ids.get(i), users.get(i)));
         }
-        return "no such request";
+        return ResponseEntity.ok(rv);
+    }
+
+    @GetMapping(path="/contact-search")
+    public ResponseEntity<UserInSearchView> contactSearch (@RequestParam String username) {
+
+        // @TODO: rpc call, findByUsername(username: string) return User
+        List<User> users = userRepo.findByUsername(username);
+
+        if (!users.isEmpty()) {
+            return ResponseEntity.ok(new UserInSearchView(users.get(0)));
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(path="/contact-invite")
+    public ResponseEntity<InviteInUserView> addFriend (@CookieValue Long uuid,
+                                                       @RequestBody ContactInvitePostRequest req) {
+
+        // @TODO: rpc call, findByUsername(username: string) return User
+        List<User> users = userRepo.findByUsername(req.getUsername());
+
+        if (!users.isEmpty()) {
+            User user = users.get(0);
+            Invite invite = inviteRepo.save(new Invite(uuid, user.getUuid()));
+            return ResponseEntity.ok(new InviteInUserView(invite.getId(), user));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+    @PostMapping(path="/contact-invite-response")
+    public ResponseEntity<ContactInUserView> contactInviteResponse (@CookieValue Long uuid,
+                                                                    @RequestBody ContactInviteResponsePostRequest req) {
+        Optional<Invite> inviteOptional = inviteRepo.findById(req.getId());
+        if (inviteOptional.isPresent()) {
+            if (req.getResponse()) {
+                Invite invite = inviteOptional.get();
+
+                // @TODO: rpc call, findByUUID(uuid: Long)) return User
+                User userA = userRepo.findById(invite.getUuidA()).get();
+
+                Relation newRelation = relationRepo.save(new Relation(userA.getUuid(), uuid));
+                return ResponseEntity.ok(new ContactInUserView(userA, newRelation.getrID()));
+            } else {
+                return ResponseEntity.ok().build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @PostMapping(path="/unfriend")
-    public @ResponseBody String unfriend (@RequestParam Long uuid,
-                                          @RequestParam Long friendUUID) {
-        List<Long> relations = contactRepo.findRelationBetween(uuid, friendUUID);
-        if (!relations.isEmpty()) {
-            contactRepo.deleteById(relations.get(0));
-            return "TRUE";
+    public ResponseEntity unfriend (@RequestBody unfriendPostRequest req) {
+        if (!relationRepo.findByrID(req.getrID()).isEmpty()) {
+            relationRepo.deleteRelationByrID(req.getrID());
+            return ResponseEntity.ok().build();
         }
-        return "FALSE";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
-//    @PostMapping(path="/signUp")
-    public ResponseEntity<UserDTO> signUp (@RequestBody SignUpRequest req) {
+    // mock auth sign up, ignore password
+    @PostMapping(path="/sign-up")
+    public ResponseEntity signUp (@RequestBody SignUpPostRequest req) {
         try {
-
-            User user = new User(req.getUsername(), req.getDisplayName(), req.getEmail());
-            userRepository.save(user);
-            return new ResponseEntity<>(new UserDTO(user), HttpStatus.ACCEPTED);
+            userRepo.save(new User(req.getUsername(), req.getDisplayName(), req.getEmail()));
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
-    // no auth
-//    @PostMapping(path="/login")
-    public ResponseEntity<UserDTO> login (@RequestBody LoginRequest req) {
-        List<User> user = userRepository.findByUsername(req.getUsername());
-        if (!user.isEmpty()) {
-            return new ResponseEntity<>(new UserDTO(user.get(0)), HttpStatus.ACCEPTED);
+    // mock auth sign up, ignore password
+    @PostMapping(path="/login")
+    public ResponseEntity<UserInLoggedInView> login (@RequestBody LoginPostRequest req) {
+        List<User> users = userRepo.findByUsername(req.getUsername());
+        if (!users.isEmpty()) {
+            User user = users.get(0);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Set-Cookie", "JWT=MSFDC");
+            headers.add("Set-Cookie", "uuid=" + user.getUuid());
+            return ResponseEntity.ok().headers(headers).body(new UserInLoggedInView(user));
         } else {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
+    }
+
+    // mock auth, no auth on JWT
+    @GetMapping(path="/auth-status")
+    public ResponseEntity<UserInLoggedInView> authStatus (@CookieValue Long uuid, @CookieValue String JWT) {
+        Optional<User> users = userRepo.findById(uuid);
+        if (users.isPresent()) {
+            return ResponseEntity.ok(new UserInLoggedInView(users.get()));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 }

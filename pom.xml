@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.gnwoo</groupId>
-    <artifactId>user-service</artifactId>
+    <artifactId>relation-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>user-service</name>
-    <description>User Service for GNW Project</description>
+    <name>relation-service</name>
+    <description>Relation Service for GNW Project</description>
 
     <properties>
         <java.version>14</java.version>

@@ -3,7 +3,7 @@ package com.gnwoo.userservice.data.table;
 import javax.persistence.*;
 
 @Entity
-public class Contact {
+public class Invite {
     @Id @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false)
@@ -11,9 +11,9 @@ public class Contact {
     @Column(nullable = false)
     private Long uuidB;
 
-    public Contact() { }
+    public Invite() { }
 
-    public Contact(Long uuidA, Long uuidB) {
+    public Invite(Long uuidA, Long uuidB) {
         this.uuidA = uuidA;
         this.uuidB = uuidB;
     }
@@ -26,15 +26,7 @@ public class Contact {
         return uuidA;
     }
 
-    public void setUuidA(Long uuidA) {
-        this.uuidA = uuidA;
-    }
-
     public Long getUuidB() {
         return uuidB;
-    }
-
-    public void setUuidB(Long uuidB) {
-        this.uuidB = uuidB;
     }
 }

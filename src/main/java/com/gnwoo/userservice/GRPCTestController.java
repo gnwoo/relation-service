@@ -3,8 +3,8 @@ package com.gnwoo.userservice;
 import com.gnwoo.userservice.authRPC.AuthProto;
 import com.gnwoo.userservice.authRPC.AuthServiceGrpc;
 import com.gnwoo.userservice.data.repo.UserRepo;
-import com.gnwoo.userservice.data.req.LoginRequest;
-import com.gnwoo.userservice.data.req.SignUpRequest;
+import com.gnwoo.userservice.data.request.LoginPostRequest;
+import com.gnwoo.userservice.data.request.SignUpPostRequest;
 import com.gnwoo.userservice.data.table.User;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@RestController
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+//@RestController
+//@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class GRPCTestController {
     @Autowired
     private UserRepo userRepository;
@@ -36,7 +36,7 @@ public class GRPCTestController {
 
     @PostMapping(path="/signUp")
     @Transactional
-    public ResponseEntity<String> signUp (@RequestBody SignUpRequest req) {
+    public ResponseEntity<String> signUp (@RequestBody SignUpPostRequest req) {
         try {
             User user = new User(req.getUsername(), req.getDisplayName(), req.getEmail());
             Long uuid = userRepository.save(user).getUuid();
@@ -58,7 +58,7 @@ public class GRPCTestController {
     }
 
     @PostMapping(path="/login")
-    public ResponseEntity<User> login (@RequestBody LoginRequest req) {
+    public ResponseEntity<User> login (@RequestBody LoginPostRequest req) {
         System.out.println("1");
         List<User> users = userRepository.findByUsername(req.getUsername());
         if (!users.isEmpty()) {
@@ -71,19 +71,11 @@ public class GRPCTestController {
                 HttpHeaders headers = new HttpHeaders();
                 headers.add("Set-Cookie", "JWT=" + res.getJWT());
                 headers.add("Set-Cookie", "uuid=" + user.getUuid());
-//                headers.add("Set-Cookie", "HttpOnly");
                 return ResponseEntity.ok()
                         .headers(headers)
                         .body(user);
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-    }
-
-    // mock auth
-    @GetMapping(path="/authStatus")
-    public ResponseEntity<String> login (@CookieValue String uuid, @CookieValue String JWT) {
-        System.out.println(uuid + " "  + JWT);
-        return ResponseEntity.ok().build();
     }
 }
