@@ -1,4 +1,4 @@
-package com.gnwoo.userservice.data.table;
+package com.gnwoo.userservice.rpc.database.table;
 
 import javax.persistence.*;
 
@@ -21,8 +21,8 @@ public class User {
         this.email = email;
     }
 
-    public Long getUuid() {
-        return uuid;
+    public String getUuid() {
+        return String.format("u_%s", this.uuid);
     }
 
     public String getUsername() {

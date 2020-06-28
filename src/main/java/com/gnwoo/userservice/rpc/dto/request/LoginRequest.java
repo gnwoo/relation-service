@@ -1,6 +1,6 @@
-package com.gnwoo.userservice.data.request;
+package com.gnwoo.userservice.rpc.dto.request;
 
-public class LoginPostRequest {
+public class LoginRequest {
     private String username;
     private String password;
 

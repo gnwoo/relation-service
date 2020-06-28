@@ -1,6 +1,6 @@
-package com.gnwoo.userservice.data.request;
+package com.gnwoo.userservice.data.dto.request;
 
-public class ContactInvitePostRequest {
+public class UserInviteRequest {
     private String username;
 
     public String getUsername() {
